@@ -1,0 +1,182 @@
+version: "3"
+
+services:
+  postgres:
+    container_name: postgres
+    hostname: postgres
+    image: postgres:alpine
+    environment:
+      - POSTGRES_DB=whatsapp_clone
+      - POSTGRES_USER=default
+      - POSTGRES_PASSWORD=pass
+    ports:
+      - 5432:5432
+    command: [
+        "postgres",
+        "-c",
+        "wal_level=logical", # Logical is the highest level of WAL logging.
+        "-c",
+        "max_replication_slots=4",
+        "-c",
+        "max_wal_senders=4"
+      ]
+
+  postgres-migrate:
+    container_name: postgres-migrate
+    image: migrate/migrate:latest
+    volumes:
+      - ./apps/backend/db.schema.sql:/migrations/000001_init.up.sql:ro
+    command:
+      [
+        "-path",
+        "/migrations",
+        "-database",
+        "postgres://default:pass@postgres:5432/whatsapp_clone?sslmode=disable",
+        "up"
+      ]
+    depends_on:
+      - postgres
+    restart: on-failure
+
+  kafka:
+    container_name: kafka
+    hostname: kafka
+    image: bitnami/kafka
+    ports:
+      - 9092:9092
+      - 29092:29092
+    environment:
+      - KAFKA_CFG_AUTO_CREATE_TOPICS_ENABLE=true
+      # KRaft
+      - KAFKA_CFG_NODE_ID=0
+      - KAFKA_CFG_PROCESS_ROLES=controller,broker
+      - KAFKA_CFG_CONTROLLER_QUORUM_VOTERS=0@kafka:9093
+      # Listeners
+      - KAFKA_CFG_LISTENERS=PLAINTEXT://:9092,CONTROLLER://:9093,PLAINTEXT_HOST://:29092
+      - KAFKA_CFG_ADVERTISED_LISTENERS=PLAINTEXT://:9092,PLAINTEXT_HOST://localhost:29092
+      - KAFKA_CFG_LISTENER_SECURITY_PROTOCOL_MAP=CONTROLLER:PLAINTEXT,PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
+      - KAFKA_CFG_CONTROLLER_LISTENER_NAMES=CONTROLLER
+      - KAFKA_CFG_INTER_BROKER_LISTENER_NAME=PLAINTEXT
+    healthcheck:
+      test: ["CMD", "kafka-topics.sh", "--bootstrap-server=localhost:9092", "--list"]
+      start_period: 15s
+      interval: 10s
+
+  kafka-migrate:
+    container_name: kafka-migrate
+    image: bitnami/kafka
+    working_dir: /opt/bitnami/kafka/bin
+    entrypoint: ["/bin/sh", "-c"]
+    depends_on:
+      kafka:
+        condition: service_healthy
+    command: |
+      "
+      # Wait until Kafka is reachable.
+      kafka-topics.sh --bootstrap-server kafka:9092 --list
+
+      kafka-topics.sh --bootstrap-server kafka:9092 --create --if-not-exists --topic db-events.public.users --replication-factor 1 --partitions 1
+      "
+
+  # Debezium is a set of distributed services to capture changes in your databases so that your
+  # applications can see those changes and respond to them. Debezium is built on top of Apache
+  # Kafka and provides a set of Kafka Connect compatible connectors. Connectors record the history
+  # of data changes in the DBMS by detecting changes as they occur, and streaming a record of each
+  # change event to a Kafka topic. Consuming applications can then read the resulting event records
+  # from the Kafka topic.
+  #
+  # The first time it connects to a PostgreSQL server or cluster, the connector takes a consistent
+  # snapshot of all schemas. After that snapshot is complete, the connector continuously captures
+  # row-level changes that insert, update, and delete database content and that were committed to a
+  # PostgreSQL database.
+  #
+  # The PostgreSQL connector contains two main parts that work together to read and process
+  # database changes:
+  #
+  # (1). A logical decoding output plug-in. You might need to install the output plug-in that you
+  #    choose to use. You must configure a replication slot that uses your chosen output plug-in
+  #    before running the PostgreSQL server. The plug-in can be one of the following:
+  #
+  #    DECODERBUFS - based on Protobuf and maintained by the Debezium community.
+  #
+  #    PGOUTPUT - the standard logical decoding output plug-in in PostgreSQL 10+. It is maintained
+  #    by the PostgreSQL community, and used by PostgreSQL itself for logical replication. This
+  #    plug-in is always present so no additional libraries need to be installed.
+  #
+  # (2). Java code (the actual Kafka Connect connector) that reads the changes produced by the
+  #    chosen logical decoding output plug-in. It uses PostgreSQL’s streaming replication protocol
+  #    by means of the PostgreSQL JDBC driver.
+  debezium:
+    container_name: debezium
+    image: debezium/connect:2.4
+    ports:
+      - 8083:8083
+    environment:
+      BOOTSTRAP_SERVERS: kafka:9092
+      GROUP_ID: 1
+      CONFIG_STORAGE_TOPIC: debezium_configs
+      STATUS_STORAGE_TOPIC: debezium_statuses
+      OFFSET_STORAGE_TOPIC: debezium_offsets
+      KEY_CONVERTER: org.apache.kafka.connect.json.JsonConverter
+      VALUE_CONVERTER: org.apache.kafka.connect.json.JsonConverter
+      ENABLE_DEBEZIUM_SCRIPTING: "true"
+    healthcheck:
+      test: ["CMD", "curl", "--silent", "--fail", "-X", "GET", "http://localhost:8083/connectors"]
+      start_period: 10s
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    depends_on:
+      - kafka
+
+  debezium-migrate:
+    container_name: debezium-migrate
+    image: alpine:latest
+    volumes:
+      - ./scripts/create-debezium-connectors.sh:/create-connectors.sh
+      - ./debezium:/debezium
+    command:
+      - /bin/sh
+      - -c
+      - |
+        chmod +x /create-connectors.sh
+        /create-connectors.sh
+    restart: on-failure
+    depends_on:
+      - debezium
+      - postgres
+      - postgres-migrate
+
+  redis:
+    container_name: redis
+    image: bitnami/redis:latest
+    hostname: redis
+    environment:
+      - REDIS_PASSWORD=pass
+    ports:
+      - 6379:6379
+
+  minio:
+    container_name: minio
+    image: docker.io/bitnami/minio:2024
+    ports:
+      - 9000:9000
+      - 9001:9001
+    environment:
+      MINIO_ROOT_USER: admin
+      MINIO_ROOT_PASSWORD: ZKnoNdHvCfXKRg
+    healthcheck:
+      test: ["CMD", "mc", "ready", "local"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  jaeger:
+    container_name: jaeger
+    image: jaegertracing/all-in-one:latest
+    hostname: jaeger
+    ports:
+      - 4317:4317
+      - 16686:16686
+    environment:
+      - COLLECTOR_OTLP_ENABLED=true

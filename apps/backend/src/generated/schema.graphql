@@ -1,0 +1,41 @@
+# ------------------------------------------------------
+# THIS FILE WAS AUTOMATICALLY GENERATED (DO NOT MODIFY)
+# ------------------------------------------------------
+
+type AuthenticationResponse {
+  accessToken: String!
+}
+
+type Query {
+  ping: String!
+  signin(args: SigninArgs!): AuthenticationResponse!
+}
+
+input SigninArgs {
+  phone: String!
+  password: String!
+}
+
+type Mutation {
+  signup(args: SignupArgs!): Boolean
+  verifyAccount(args: VerifyAccountArgs!): AuthenticationResponse!
+  deleteAccount: Boolean
+  updateProfile(args: UpdateProfileArgs!): Boolean
+  getPresignedProfilePictureUri: String!
+}
+
+input SignupArgs {
+  name: String!
+  phone: String!
+  password: String!
+}
+
+input VerifyAccountArgs {
+  phone: String!
+  otp: String!
+}
+
+input UpdateProfileArgs {
+  name: String!
+  status: String
+}
