@@ -1,5 +1,6 @@
 import { Field, InputType, ObjectType, PickType } from "@nestjs/graphql"
 import { UserEntity } from "./user.entity"
+import { DBEventOp } from "../../utils"
 
 @InputType()
 export class SignupArgs extends PickType(UserEntity, ["name", "phone", "password"], InputType) {}
@@ -10,7 +11,7 @@ export interface UserDbEvent {
   payload: {
     before?: UserDbRowCDCProjection
     after?: UserDbRowCDCProjection
-    op: "c" | "r" | "u" | "d"
+    op: DBEventOp
   }
 }
 

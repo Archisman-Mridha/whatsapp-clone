@@ -1,64 +1,31 @@
-import { ConsoleLogger } from "@nestjs/common"
-import { z } from "zod"
+export enum Constants {
+  MAX_GRAPHQL_QUERY_COMPLEXITY = 30,
 
-export const isProductionEnv = () => process.env.NODE_ENV === "production"
+  // Kafka.
+  KAFKA_CLUSTER = "KAFKA_CLUSTER",
+  KAFKA_CLIENT_ID = "whatsapp-clone",
+  KAFKA_CONSUMER_GROUP_ID = "whatsapp-clone",
+  KAFKA_TOPIC_USERS = "db-events.public.users",
 
-export const configSchema = z.object({
-  SERVER_PORT: z.string().transform(value => parseInt(value)),
-
-  POSTGRES_DB_HOST: z.string(),
-  POSTGRES_DB_PORT: z.string().transform(value => parseInt(value)),
-  POSTGRES_DB_USER: z.string(),
-  POSTGRES_DB_PASSWORD: z.string(),
-  POSTGRES_DB_NAME: z.string(),
-
-  TWILIO_ACCOUNT_SID: z.string(),
-  TWILIO_AUTH_TOKEN: z.string(),
-  TWILIO_VERIFY_SID: z.string(),
-
-  KAFKA_BROKER_URL: z.string(),
-
-  JWT_SECRET: z.string(),
-
-  MINIO_ENDPOINT: z.string(),
-  MINIO_PORT: z.string().transform(value => parseInt(value)),
-  MINIO_ACCESS_KEY: z.string(),
-  MINIO_SECRET_KEY: z.string(),
-
-  JAEGER_URL: z.string()
-})
-
-export const PhoneIsAlreadyRegisteredError = new Error("Phone number is already registered"),
-  RetryOTPVerificationError = new Error("Please retry verifying your account"),
-  UnAuthenticatedError = new Error("User is unauthenticated"),
-  WrongPasswordError = new Error("Wrong password"),
-  ServerError = new Error("Unexpected server error occurred")
-
-export class CustomLogger extends ConsoleLogger {
-  error(message: unknown): void {
-    if (
-      [
-        PhoneIsAlreadyRegisteredError.message,
-        RetryOTPVerificationError.message,
-        UnAuthenticatedError.message,
-        WrongPasswordError.message,
-        ServerError.message
-      ].includes(message as string)
-    )
-      return
-
-    //@ts-ignore
-    super.error(...arguments)
-  }
+  // Minio.
+  MINIO_BUCKET_PROFILE_PICTURES = "profile-pictures",
+  MINIO_BUCKET_GROUP_PROFILE_PICTURES = "group-profile-pictures",
+  MINIO_PRESIGNED_URL_LONGIVITY = 120 // (seconds)
 }
 
-export const KAFKA_CLUSTER = Symbol("KAFKA_CLUSTER")
+export enum ApplicationErrors {
+  // Signup.
+  PHONE_IS_ALREADY_REGISTERED = "Phone number is already registered",
+  RETRY_OTP_VERIFICATION = "Please retry verifying your account",
 
-export enum KafkaTopic {
-  Users = "db-events.public.users"
+  // Signin.
+  UNAUTHENTICATED = "User is unauthenticated",
+  WRONG_PASSWORD = "Wrong password",
+
+  // General.
+  SERVER = "Unexpected server error occurred"
 }
 
-export enum MinioBucket {
-  ProfilePictures = "profile-pictures",
-  GroupProfilePictures = "group-profile-pictures"
-}
+export const isProductionEnv = process.env.NODE_ENV === "production"
+
+export type DBEventOp = "c" | "r" | "u" | "d"

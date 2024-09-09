@@ -3,19 +3,14 @@ import { InjectRepository } from "@nestjs/typeorm"
 import { UserEntity } from "./user.entity"
 import { EntityNotFoundError, Repository } from "typeorm"
 import { AuthenticationResponse, SigninArgs, SignupArgs, VerifyAccountArgs } from "./types"
-import {
-  PhoneIsAlreadyRegisteredError,
-  RetryOTPVerificationError,
-  ServerError,
-  WrongPasswordError,
-  configSchema
-} from "../../utils"
 import { TwilioService } from "nestjs-twilio"
 import { ConfigService } from "@nestjs/config"
 import { KafkaRetriableException } from "@nestjs/microservices"
 import { JwtService } from "@nestjs/jwt"
 import { JWTPayload } from "../authentication/types"
 import { compare } from "bcrypt"
+import { Config } from "../../config"
+import { ApplicationErrors } from "../../utils"
 
 @Injectable()
 export class UsersService {
@@ -25,9 +20,8 @@ export class UsersService {
     @InjectRepository(UserEntity)
     private readonly usersRepository: Repository<UserEntity>,
 
+    private readonly configService: ConfigService<Config>,
     private readonly twilioService: TwilioService,
-    private readonly configService: ConfigService<typeof configSchema._type>,
-
     private readonly jwtService: JwtService
   ) {
     this.twilioVerifyService = this.twilioService.client.verify.v2.services(
@@ -37,14 +31,14 @@ export class UsersService {
 
   private readonly logger = new Logger("UsersModule")
 
-  // throws : PhoneIsAlreadyRegisteredError | ServerError
+  // throws : PhoneIsAlreadyRegisteredError / ServerError
   async signup(args: SignupArgs) {
     const { identifiers } = await this.usersRepository.insert(args).catch((error: Error) => {
       if (error.message.includes("duplicate key value violates unique constraint"))
-        throw PhoneIsAlreadyRegisteredError
+        throw new Error(ApplicationErrors.PHONE_IS_ALREADY_REGISTERED)
 
       this.logger.error("Unexpected error occurred when saving user", error)
-      throw ServerError
+      throw new Error(ApplicationErrors.SERVER)
     })
 
     if (identifiers.length > 0) this.logger.log(`New user created with id ${identifiers[0].id}`)
@@ -62,21 +56,21 @@ export class UsersService {
     this.logger.log(`Account verification OTP has been sent to ${phone}`)
   }
 
-  // throws : RetryOTPVerificationError | ServerError
+  // throws : RetryOTPVerificationError / ServerError
   async verifyAccount(args: VerifyAccountArgs) {
     const { status } = await this.twilioVerifyService.verificationChecks
       .create({ to: args.phone, code: args.otp })
       .catch(error => {
         this.logger.error("Unexpected error doing OTP verification check", error)
-        throw ServerError
+        throw new Error(ApplicationErrors.SERVER)
       })
 
     switch (status) {
       case "pending":
-        throw RetryOTPVerificationError
+        throw new Error(ApplicationErrors.RETRY_OTP_VERIFICATION)
 
       case "canceled":
-        throw ServerError
+        throw new Error(ApplicationErrors.SERVER)
     }
 
     this.logger.log(`User with ${args.phone} has been verified`)
@@ -90,7 +84,7 @@ export class UsersService {
         if (error instanceof EntityNotFoundError) return false
 
         this.logger.error("Unexpected error finding user", error)
-        throw ServerError
+        throw new Error(ApplicationErrors.SERVER)
       })
 
     return true
@@ -102,7 +96,7 @@ export class UsersService {
       .findOneOrFail({ where: { phone }, select: { id: true } })
       .catch(error => {
         this.logger.error("Unexpected error finding id of user with phone", error)
-        throw ServerError
+        throw new Error(ApplicationErrors.SERVER)
       })
 
     return id.toString()
@@ -117,15 +111,15 @@ export class UsersService {
       })
       .catch(error => {
         this.logger.error("Unexpected error finding user by phone", error)
-        throw ServerError
+        throw new Error(ApplicationErrors.SERVER)
       })
 
     const passwordMatched = await compare(args.password, user.password).catch(error => {
       this.logger.error("Unexpected error verifying password using bcrypt", error)
-      throw ServerError
+      throw new Error(ApplicationErrors.SERVER)
     })
 
-    if (!passwordMatched) throw WrongPasswordError
+    if (!passwordMatched) throw new Error(ApplicationErrors.WRONG_PASSWORD)
 
     return {
       accessToken: this.jwtService.sign({ userId: user.id.toString() } as JWTPayload)

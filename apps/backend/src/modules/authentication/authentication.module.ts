@@ -5,7 +5,6 @@ import { PassportJWTStrategy } from "./passport-jwt.strategy"
 
 @Module({
   imports: [PassportModule, UsersModule],
-
   providers: [PassportJWTStrategy]
 })
 export class AuthenticationModule {}

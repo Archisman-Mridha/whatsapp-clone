@@ -1,9 +1,9 @@
 import { Controller } from "@nestjs/common"
 import { MessagePattern, Payload } from "@nestjs/microservices"
 import { UsersService } from "./users.service"
-import { KafkaTopic } from "../../utils"
 import { UserDbEvent } from "./types"
 import { ProfilesService } from "../profiles/profiles.service"
+import { Constants } from "../../utils"
 
 @Controller()
 export class UsersController {
@@ -12,7 +12,7 @@ export class UsersController {
     private readonly profilesService: ProfilesService
   ) {}
 
-  @MessagePattern(KafkaTopic.Users)
+  @MessagePattern(Constants.KAFKA_TOPIC_USERS)
   async handleDbEvent(@Payload() { payload }: UserDbEvent) {
     switch (payload.op) {
       case "c":

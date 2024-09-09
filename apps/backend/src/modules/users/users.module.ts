@@ -5,11 +5,12 @@ import { UserEntity } from "./user.entity"
 import { UsersService } from "./users.service"
 import { TwilioModule } from "nestjs-twilio"
 import { ConfigModule, ConfigService } from "@nestjs/config"
-import { KAFKA_CLUSTER, configSchema } from "../../utils"
 import { ClientsModule, Transport } from "@nestjs/microservices"
 import { UsersController } from "./users.controller"
 import { JwtModule } from "@nestjs/jwt"
 import { ProfilesModule } from "../profiles/profiles.module"
+import { Config } from "../../config"
+import { Constants } from "../../utils"
 
 @Module({
   imports: [
@@ -17,7 +18,7 @@ import { ProfilesModule } from "../profiles/profiles.module"
 
     ClientsModule.register([
       {
-        name: KAFKA_CLUSTER,
+        name: Constants.KAFKA_CLUSTER as string,
         transport: Transport.KAFKA
       }
     ]),
@@ -26,7 +27,7 @@ import { ProfilesModule } from "../profiles/profiles.module"
       imports: [ConfigModule],
       inject: [ConfigService],
 
-      useFactory: (configService: ConfigService<typeof configSchema._type>) => ({
+      useFactory: (configService: ConfigService<Config>) => ({
         accountSid: configService.get("TWILIO_ACCOUNT_SID"),
         authToken: configService.get("TWILIO_AUTH_TOKEN")
       })
@@ -35,7 +36,7 @@ import { ProfilesModule } from "../profiles/profiles.module"
     JwtModule.registerAsync({
       inject: [ConfigService],
 
-      useFactory: (configService: ConfigService<typeof configSchema._type>) => ({
+      useFactory: (configService: ConfigService<Config>) => ({
         signOptions: { expiresIn: "7d" },
         secret: configService.get("JWT_SECRET")
       })

@@ -4,9 +4,9 @@ import { Repository } from "typeorm"
 import { ProfileEntity } from "./profile.entity"
 import { CreateProfileArgs, UpdateProfileArgs } from "./types"
 import { KafkaRetriableException } from "@nestjs/microservices"
-import { MinioBucket, ServerError } from "../../utils"
 import { InjectMinio } from "nestjs-minio"
 import { Client } from "minio"
+import { ApplicationErrors, Constants } from "../../utils"
 
 @Injectable()
 export class ProfilesService {
@@ -32,17 +32,22 @@ export class ProfilesService {
   async updateProfile(userId: number, args: UpdateProfileArgs) {
     await this.profilesRepository.update(userId, args).catch(error => {
       this.logger.log("Unexpected error updating profile", error)
-      throw ServerError
+      throw ApplicationErrors.SERVER
     })
   }
 
   // throws : ServerError
   async getPresignedProfilePictureUri(userId: number): Promise<string> {
     return await this.minioClient
-      .presignedUrl("GET", MinioBucket.ProfilePictures, userId.toString(), PRESIGNED_URL_LONGIVITY)
+      .presignedUrl(
+        "GET",
+        Constants.MINIO_BUCKET_PROFILE_PICTURES,
+        userId.toString(),
+        Constants.MINIO_PRESIGNED_URL_LONGIVITY
+      )
       .catch(error => {
         this.logger.log("Unexpected error getting presigned url", error)
-        throw ServerError
+        throw ApplicationErrors.SERVER
       })
   }
 
@@ -54,5 +59,3 @@ export class ProfilesService {
     })
   }
 }
-
-const PRESIGNED_URL_LONGIVITY = 120 // in seconds

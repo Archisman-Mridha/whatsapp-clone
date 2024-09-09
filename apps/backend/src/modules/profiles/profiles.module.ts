@@ -5,7 +5,7 @@ import { ProfilesService } from "./profiles.service"
 import { ProfilesResolver } from "./profiles.resolver"
 import { NestMinioModule } from "nestjs-minio"
 import { ConfigService } from "@nestjs/config"
-import { configSchema } from "../../utils"
+import { Config } from "../../config"
 
 @Module({
   imports: [
@@ -13,7 +13,7 @@ import { configSchema } from "../../utils"
 
     NestMinioModule.registerAsync({
       inject: [ConfigService],
-      useFactory: (configService: ConfigService<typeof configSchema._type>) => ({
+      useFactory: (configService: ConfigService<Config>) => ({
         endPoint: configService.get("MINIO_ENDPOINT"),
         port: configService.get("MINIO_PORT"),
         accessKey: configService.get("MINIO_ACCESS_KEY"),

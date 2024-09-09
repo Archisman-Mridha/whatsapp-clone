@@ -32,7 +32,6 @@ export class UserEntity {
 
           NOTE - Bcrypt internally uses a modified version of the Blowfish encryption algorithm.
         */
-
         return await hash(value, 10)
       },
 
