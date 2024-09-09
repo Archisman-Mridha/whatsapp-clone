@@ -5,14 +5,13 @@ import { Column, Entity, PrimaryColumn } from "typeorm"
 @Entity({ name: "profiles" })
 @ObjectType({ isAbstract: true })
 export class ProfileEntity {
-
-  @PrimaryColumn( )
-  @Field( )
+  @PrimaryColumn()
+  @Field()
   id: number
 
-  @Column( )
+  @Column()
   @Length(2, 50)
-  @Field( )
+  @Field()
   name: string
 
   @Column({ nullable: true })
@@ -21,6 +20,6 @@ export class ProfileEntity {
   status: string
 
   @Column({ unique: true })
-  @Field( )
+  @Field()
   phone: string
 }

@@ -6,20 +6,19 @@ import { Column, Entity, Index, PrimaryGeneratedColumn } from "typeorm"
 @Entity({ name: "users" })
 @ObjectType({ isAbstract: true })
 export class UserEntity {
-
-  @PrimaryGeneratedColumn( )
-  @Field( )
+  @PrimaryGeneratedColumn()
+  @Field()
   id: number
 
-  @Column( )
+  @Column()
   @Length(2, 50)
-  @Field( )
+  @Field()
   name: string
 
   @Column({ unique: true })
   @Index("users_idx_phone")
-  @IsPhoneNumber( )
-  @Field( )
+  @IsPhoneNumber()
+  @Field()
   phone: string
 
   @Column({
@@ -40,12 +39,12 @@ export class UserEntity {
       from: async value => value
     }
   })
-  @IsAlphanumeric( )
+  @IsAlphanumeric()
   @Length(4, 50)
-  @Field( )
+  @Field()
   password: string
 
   @Column({ name: "is_verified", default: false })
-  @Field( )
+  @Field()
   isVerified: boolean
 }

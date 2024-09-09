@@ -13,16 +13,18 @@ import { ProfilesModule } from "../profiles/profiles.module"
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([ UserEntity ]),
+    TypeOrmModule.forFeature([UserEntity]),
 
-    ClientsModule.register([{
-      name: KAFKA_CLUSTER,
-      transport: Transport.KAFKA
-    }]),
+    ClientsModule.register([
+      {
+        name: KAFKA_CLUSTER,
+        transport: Transport.KAFKA
+      }
+    ]),
 
     TwilioModule.forRootAsync({
-      imports: [ ConfigModule ],
-      inject: [ ConfigService ],
+      imports: [ConfigModule],
+      inject: [ConfigService],
 
       useFactory: (configService: ConfigService<typeof configSchema._type>) => ({
         accountSid: configService.get("TWILIO_ACCOUNT_SID"),
@@ -42,9 +44,9 @@ import { ProfilesModule } from "../profiles/profiles.module"
     ProfilesModule
   ],
 
-  providers: [ UsersService, UsersResolver ],
-  controllers: [ UsersController ],
+  providers: [UsersService, UsersResolver],
+  controllers: [UsersController],
 
-  exports: [ UsersService ]
+  exports: [UsersService]
 })
-export class UsersModule { }
+export class UsersModule {}

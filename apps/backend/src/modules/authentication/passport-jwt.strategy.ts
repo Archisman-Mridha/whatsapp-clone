@@ -6,27 +6,25 @@ import { UnAuthenticatedError, configSchema } from "../../utils"
 import { ConfigService } from "@nestjs/config"
 import { Injectable } from "@nestjs/common"
 
-@Injectable( )
+@Injectable()
 export class PassportJWTStrategy extends PassportStrategy(Strategy) {
   constructor(
     config: ConfigService<typeof configSchema._type>,
-    private readonly usersService: UsersService,
+    private readonly usersService: UsersService
   ) {
     super({
-      jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken( ),
+      jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
       secretOrKey: config.get("JWT_SECRET"),
       ignoreExpiration: false
     })
   }
 
   async validate(payload: JWTPayload): Promise<string> {
-    const userId= payload.userId
+    const userId = payload.userId
 
-    await this.usersService.doesUserWithIdExist(userId)
-      .then(exists => {
-        if(!exists)
-          throw UnAuthenticatedError
-      })
+    await this.usersService.doesUserWithIdExist(userId).then(exists => {
+      if (!exists) throw UnAuthenticatedError
+    })
 
     return userId
   }

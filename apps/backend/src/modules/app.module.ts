@@ -14,11 +14,11 @@ import { AuthenticationModule } from "./authentication/authentication.module"
 import { ProfileEntity } from "./profiles/profile.entity"
 import { ProfilesModule } from "./profiles/profiles.module"
 
-@Injectable( )
+@Injectable()
 class TypeormConfigService implements TypeOrmOptionsFactory {
-  constructor(private readonly configService: ConfigService<typeof configSchema._type>) { }
+  constructor(private readonly configService: ConfigService<typeof configSchema._type>) {}
 
-  createTypeOrmOptions( ): TypeOrmModuleOptions {
+  createTypeOrmOptions(): TypeOrmModuleOptions {
     return {
       type: "postgres",
 
@@ -28,7 +28,7 @@ class TypeormConfigService implements TypeOrmOptionsFactory {
       password: this.configService.get("POSTGRES_DB_PASSWORD"),
       database: this.configService.get("POSTGRES_DB_NAME"),
 
-      entities: [ UserEntity, ProfileEntity ]
+      entities: [UserEntity, ProfileEntity]
     }
   }
 }
@@ -39,7 +39,6 @@ class TypeormConfigService implements TypeOrmOptionsFactory {
 // The root module is the starting point Nest uses to build the application graph - the internal
 // data structure Nest uses to resolve module and provider relationships and dependencies.
 @Module({
-
   // The list of imported modules that export the providers which are required in this module.
   imports: [
     ConfigModule.forRoot({
@@ -47,8 +46,8 @@ class TypeormConfigService implements TypeOrmOptionsFactory {
 
       validate: (config: Record<string, unknown>) => configSchema.parse(config),
 
-      ignoreEnvFile: isProductionEnv( ),
-      envFilePath: !isProductionEnv( ) && join(process.cwd( ), "apps/backend/.env.dev"),
+      ignoreEnvFile: isProductionEnv(),
+      envFilePath: !isProductionEnv() && join(process.cwd(), "apps/backend/.env.dev"),
 
       cache: true
     }),
@@ -56,15 +55,14 @@ class TypeormConfigService implements TypeOrmOptionsFactory {
     GraphQLModule.forRoot<ApolloDriverConfig>({
       driver: ApolloDriver,
 
-      autoSchemaFile:
-        isProductionEnv( )
-          ? true // The schema file will generated in-memory.
-          : join(process.cwd( ), "apps/backend/src/generated/schema.graphql"),
+      autoSchemaFile: isProductionEnv()
+        ? true // The schema file will generated in-memory.
+        : join(process.cwd(), "apps/backend/src/generated/schema.graphql"),
 
-      includeStacktraceInErrorResponses: !isProductionEnv( ),
+      includeStacktraceInErrorResponses: !isProductionEnv(),
 
       playground: false,
-      plugins: [ ApolloServerPluginLandingPageLocalDefault( ) ]
+      plugins: [ApolloServerPluginLandingPageLocalDefault()]
     }),
 
     TypeOrmModule.forRootAsync({
@@ -75,11 +73,10 @@ class TypeormConfigService implements TypeOrmOptionsFactory {
     UsersModule,
     ProfilesModule,
 
-    HealthModule,
+    HealthModule
   ],
 
   // Providers are instantiated and injected into this class (by Nest) as dependencies.
-  providers: [ AppResolver ]
-
+  providers: [AppResolver]
 })
-export class AppModule { }
+export class AppModule {}

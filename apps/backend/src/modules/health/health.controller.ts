@@ -6,13 +6,13 @@ export class HealthController {
   constructor(
     private healthCheckService: HealthCheckService,
     private readonly db: TypeOrmHealthIndicator
-  ) { }
+  ) {}
 
-  @Get( )
-  @HealthCheck( )
-  check( ) {
+  @Get()
+  @HealthCheck()
+  check() {
     return this.healthCheckService.check([
-      ( ) => this.db.pingCheck("database"),
+      () => this.db.pingCheck("database")
 
       // TODO: Add Kafka connection health check
 

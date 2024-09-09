@@ -9,12 +9,11 @@ import { configSchema } from "../../utils"
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([ ProfileEntity ]),
+    TypeOrmModule.forFeature([ProfileEntity]),
 
     NestMinioModule.registerAsync({
-      inject: [ ConfigService ],
+      inject: [ConfigService],
       useFactory: (configService: ConfigService<typeof configSchema._type>) => ({
-
         endPoint: configService.get("MINIO_ENDPOINT"),
         port: configService.get("MINIO_PORT"),
         accessKey: configService.get("MINIO_ACCESS_KEY"),
@@ -24,8 +23,8 @@ import { configSchema } from "../../utils"
     })
   ],
 
-  providers: [ ProfilesService, ProfilesResolver ],
+  providers: [ProfilesService, ProfilesResolver],
 
-  exports: [ ProfilesService ]
+  exports: [ProfilesService]
 })
-export class ProfilesModule { }
+export class ProfilesModule {}

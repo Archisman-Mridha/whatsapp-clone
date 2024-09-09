@@ -17,8 +17,8 @@
         "webpackConfig": "apps/backend/webpack.config.js"
       },
       "configurations": {
-        "development": { },
-        "production": { }
+        "development": {},
+        "production": {}
       }
     },
     "serve": {
@@ -48,5 +48,5 @@
       }
     }
   },
-  "tags": [ ]
+  "tags": []
 }

@@ -1,0 +1,13 @@
+[NX Daemon Server] - 2024-09-09T00:12:22.748Z - Started listening on: /var/folders/p0/b1mk58s15cb6j07q7bprmxy40000gn/T/11969d4483258805ddd8/d.sock
+[NX Daemon Server] - 2024-09-09T00:12:22.750Z - [WATCHER]: Subscribed to changes within: /Users/archismanmridha/Documents/resume/whatsapp-clone (native)
+[NX Daemon Server] - 2024-09-09T00:12:22.752Z - Established a connection. Number of open connections: 1
+[NX Daemon Server] - 2024-09-09T00:12:22.753Z - Closed a connection. Number of open connections: 0
+[NX Daemon Server] - 2024-09-09T00:12:22.753Z - Established a connection. Number of open connections: 1
+[NX Daemon Server] - 2024-09-09T00:12:22.755Z - [REQUEST]: Responding to the client. handleGlob
+[NX Daemon Server] - 2024-09-09T00:12:22.755Z - Done responding to the client handleGlob
+[NX Daemon Server] - 2024-09-09T00:12:22.755Z - Handled GLOB. Handling time: 1. Response time: 0.
+[NX Daemon Server] - 2024-09-09T00:12:23.076Z - [REQUEST]: Responding to the client. handleNxWorkspaceFiles
+[NX Daemon Server] - 2024-09-09T00:12:23.076Z - Done responding to the client handleNxWorkspaceFiles
+[NX Daemon Server] - 2024-09-09T00:12:23.076Z - Handled GET_NX_WORKSPACE_FILES. Handling time: 1. Response time: 0.
+[NX Daemon Server] - 2024-09-09T00:12:23.149Z - Closed a connection. Number of open connections: 0
+[NX Daemon Server] - 2024-09-09T00:12:26.530Z - [WATCHER]: Processing file changes in outputs

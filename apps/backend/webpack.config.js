@@ -3,7 +3,7 @@ const { composePlugins, withNx } = require("@nx/webpack")
 // Nx plugins for webpack.
 module.exports = composePlugins(
   withNx({
-    target: "node",
+    target: "node"
 
     // Using the SWC compiler causes errors like - healthCheckService / configService is undefined.
     // compiler: "swc"
